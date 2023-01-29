@@ -1,7 +1,8 @@
-from flask import request, Blueprint, jsonify, make_response
+from flask import request, Blueprint, jsonify, make_response, json
 from database import EMSinfo
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import hashlib  # hash the user password
+from bson import json_util
 
 mod = Blueprint('controller', __name__)
 database = EMSinfo()
@@ -68,3 +69,12 @@ def updateProfile():
     elif request.method == "DELETE":
         result = collection.delete_one({'username': current_user})
         return make_response(result.raw_result)
+
+@mod.route('/get/profile', methods=['GET'])
+@jwt_required()
+def getProfile():
+    current_user = get_jwt_identity()
+    collection = database.userProfile()
+    result = collection.find_one({"username": current_user})
+    return json.loads(json_util.dumps(result))
+    
